@@ -93,13 +93,20 @@ class PanoptoModel():
                 "parentId": "null", "folderSet": 1}
         )
 
-        courses = [f["Name"] for f in folders if self.is_course(f["Name"])]
+        courses_names = [f["Name"] for f in folders]
+        # courses = [n for n in courses_names if self.is_course(n)]  # rimuove troppo
+        courses = courses_names
 
         print("-"*55)
         print("Corsi disponibili")
         print("-"*55)
-
         for c in courses:
+            print(c)
+
+        print("-"*55)
+        print("Corsi esclusi")
+        print("-"*55)
+        for c in list(set(courses_names) - set(courses)):
             print(c)
 
         # with open("courses.txt", "w") as fp:
