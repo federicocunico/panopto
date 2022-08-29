@@ -1,4 +1,3 @@
-import requests
 from panopto_downloader.configs import init_config
 from panopto_downloader.models.panopto_model import PanoptoModel
 

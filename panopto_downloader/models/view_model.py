@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import tkinter.font as tkFont
 
 from panopto_downloader.models.panopto_model import PanoptoModel
@@ -15,7 +16,7 @@ class MainWindow(tk.Tk):
         root.title("Panopto Downloader")
         # setting window size
         width = 510
-        height = 464
+        height = 550
         screenwidth = root.winfo_screenwidth()
         screenheight = root.winfo_screenheight()
         alignstr = '%dx%d+%d+%d' % (width, height,
@@ -91,7 +92,11 @@ class MainWindow(tk.Tk):
             self.panopto_model.config.COURSE = value
 
     def download_course(self):
-        self.panopto_model.download_now()
+        found = self.panopto_model.download_now()
+        if not found:
+            messagebox.showwarning("Warning!", f"Course not found: {self.panopto_model.config.COURSE}")
+        else:
+            messagebox.showinfo("Success", "Download successful")
 
     def set_token(self):
         self.panopto_model.set_token(self.token_entry.get())

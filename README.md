@@ -17,9 +17,49 @@ You will need the ASPXAUTH token. Follow the instructions below
 
 ## Requirements
 - Python >=3.6
-- ffmpeg (suggested install: `apt-get install ffmpeg`)
+- ffmpeg 
+    - Linux: suggested install: `apt-get install ffmpeg`
+    - Windows: download the ffmpeg [binaries](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z) and place it in the same folder of the executable/python file with the following structure: `./ffmpeg/<executables>.exe`
+
 - Python modules:
     - youtube_dl
     - tk
     - requests
     - pydantic
+
+## Windows instructions
+Run the main file (`main_tk.py`) file or the executable, after placing the ffmpeg binaries (see requirements) in the same folder as the main file / executable. The structure should be:
+
+```
+ROOT
+│   main_tk.py / main_tk.exe
+├───ffmpeg
+│       ffmpeg.exe
+│       ffplay.exe
+│       ffprobe.exe
+
+```
+
+## Linux Instructions
+Install ffmpeg, ensure it is found in the system.
+Then distribute or execute the main file (`main_tk.py`).
+
+
+## Distribution:
+You can distribute in two modes: `pyinstaller` and `nuitka`.
+
+### Pyinstaller
+First, install `pyinstaller` with 
+
+```
+pip install pyinstaller
+```
+
+Then execute (use `pyinstaller.exe` instead of `pyinstaller` on windows)
+
+```
+pyinstaller --onefile main_tk.py
+```
+
+### Nuitka
+`TODO`

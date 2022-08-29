@@ -1,5 +1,6 @@
 import json
 import os
+from tkinter import messagebox
 import requests
 import youtube_dl
 import re
@@ -56,7 +57,13 @@ class PanoptoModel():
             txt = "Downloading: " + dest_filename
             print(txt)
 
+            base_ydl_opts = self.config.ydl_opts  # defaults empty {}
             ydl_opts = {"outtmpl": dest_filename, "quiet": True}
+
+            # merge with configs
+            for k,v in base_ydl_opts.items():
+                ydl_opts[k] = v
+
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([streams[i]["StreamUrl"]])
 
@@ -115,6 +122,7 @@ class PanoptoModel():
         for folder in folders:
             name = folder["Name"]
             if matches(name, self.config.COURSE):
+                messagebox.showinfo("Starting download", f"Press OK to download the course: \"{self.config.COURSE}\"")
                 self.dl_folder(folder)
                 found = True
 

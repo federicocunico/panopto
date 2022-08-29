@@ -1,6 +1,8 @@
 import os
+import sys
 import configparser
-from typing import Optional
+from tkinter import messagebox
+from typing import Dict, Optional
 from pydantic import BaseModel
 
 conf_file = "panopto.ini"
@@ -9,6 +11,9 @@ class Config(BaseModel):
     COURSE: Optional[str]
     PANOPTO_BASE: str
     TOKEN: Optional[str]
+
+    # see youtube_dl.YoutubeDL
+    ydl_opts: Dict[str, str] = {}
 
     def dump(self) -> None:
         with open(conf_file, "w") as fp:
@@ -44,4 +49,15 @@ def config_setup() -> Config:
 
 def init_config() -> Config:
     config = config_setup()
+
+    # Hardcoded for Windows
+    if sys.platform == "win32":
+        ffmpeg_file = "./ffmpeg/ffmpeg.exe"
+        if not os.path.isfile(ffmpeg_file):
+            error = f"FFMPEG not found in {ffmpeg_file}. Download the binaries and place them here."
+            messagebox.showerror("Error!", error)
+            sys.exit(-1)
+
+        config.ydl_opts["ffmpeg_location"] = ffmpeg_file
+
     return config
