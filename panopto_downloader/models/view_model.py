@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import BOTH, LEFT, RIGHT, Y, messagebox
 import tkinter.font as tkFont
 
 from panopto_downloader.models.panopto_model import PanoptoModel
@@ -16,7 +16,7 @@ class MainWindow(tk.Tk):
         root.title("Panopto Downloader")
         # setting window size
         width = 510
-        height = 550
+        height = 460
         screenwidth = root.winfo_screenwidth()
         screenheight = root.winfo_screenheight()
         alignstr = '%dx%d+%d+%d' % (width, height,
@@ -24,18 +24,32 @@ class MainWindow(tk.Tk):
         root.geometry(alignstr)
         root.resizable(width=False, height=False)
 
-        self.courses_listbox = tk.Listbox(root)
+        # USE FRAME
+        courses_frame = tk.Frame(root)
+        courses_frame.place(x=20, y=190, width=450, height=200)
+        self.courses_listbox = tk.Listbox(courses_frame, width=450, height=200)
+
+        # USE ROOT
+        # self.courses_listbox = tk.Listbox(root)
+
         self.courses_listbox["borderwidth"] = "1px"
-        ft = tkFont.Font(family='Times', size=10)
+        ft = tkFont.Font(family='Times', size=12)
         self.courses_listbox["font"] = ft
         self.courses_listbox["fg"] = "#333333"
         self.courses_listbox["justify"] = "left"
-        self.courses_listbox.place(x=20, y=190, width=470, height=200)
+        # self.courses_listbox.place(x=20, y=190, width=470, height=200)  # use ROOT
+        self.courses_listbox.place(x=0, y=0, width=450, height=200)
         self.courses_listbox.bind('<<ListboxSelect>>', self.on_course_select)
+
+        # Scrollbar only on frame
+        scrollbar = tk.Scrollbar(courses_frame)
+        self.courses_listbox.config(yscrollcommand = scrollbar.set)
+        scrollbar.config(command = self.courses_listbox.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
 
         download_button = tk.Button(root)
         download_button["bg"] = "#f0f0f0"
-        ft = tkFont.Font(family='Times', size=10)
+        ft = tkFont.Font(family='Times', size=12)
         download_button["font"] = ft
         download_button["fg"] = "#000000"
         download_button["justify"] = "center"
@@ -53,7 +67,7 @@ class MainWindow(tk.Tk):
 
         set_token_button = tk.Button(root)
         set_token_button["bg"] = "#f0f0f0"
-        ft = tkFont.Font(family='Times', size=10)
+        ft = tkFont.Font(family='Times', size=12)
         set_token_button["font"] = ft
         set_token_button["fg"] = "#000000"
         set_token_button["justify"] = "center"
