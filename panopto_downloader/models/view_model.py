@@ -32,13 +32,21 @@ class MainWindow(tk.Tk):
         # USE ROOT
         # self.courses_listbox = tk.Listbox(root)
 
+        courses_label = tk.Label(courses_frame)
+        ft = tkFont.Font(family='Times', size=16)
+        courses_label["font"] = ft
+        courses_label["fg"] = "#333333"
+        courses_label["justify"] = "center"
+        courses_label["text"] = "Courses list"
+        courses_label.place(x=0, y=0, width=450, height=40)
+
         self.courses_listbox["borderwidth"] = "1px"
         ft = tkFont.Font(family='Times', size=12)
         self.courses_listbox["font"] = ft
         self.courses_listbox["fg"] = "#333333"
         self.courses_listbox["justify"] = "left"
         # self.courses_listbox.place(x=20, y=190, width=470, height=200)  # use ROOT
-        self.courses_listbox.place(x=0, y=0, width=450, height=200)
+        self.courses_listbox.place(x=0, y=40, width=450, height=200)
         self.courses_listbox.bind('<<ListboxSelect>>', self.on_course_select)
 
         # Scrollbar only on frame
@@ -65,6 +73,16 @@ class MainWindow(tk.Tk):
         title_label["text"] = "Panopto Record Downloader"
         title_label.place(x=60, y=30)
 
+        show_token_button = tk.Button(root)
+        show_token_button["bg"] = "#f0f0f0"
+        ft = tkFont.Font(family='Times', size=12)
+        show_token_button["font"] = ft
+        show_token_button["fg"] = "#000000"
+        show_token_button["justify"] = "center"
+        show_token_button["text"] = "Show Token"
+        show_token_button.place(x=320, y=130, width=100, height=25)
+        show_token_button["command"] = self.show_token
+
         set_token_button = tk.Button(root)
         set_token_button["bg"] = "#f0f0f0"
         ft = tkFont.Font(family='Times', size=12)
@@ -77,7 +95,7 @@ class MainWindow(tk.Tk):
 
         self.token_entry = tk.Entry(root)
         self.token_entry.config(font=("helvetica", 10))
-        self.token_entry.place(x=20, y=130, width=350, height=25)
+        self.token_entry.place(x=20, y=130, width=300, height=25)
         self.set_last_token(self.panopto_model.config.TOKEN)
 
         self.load()
@@ -111,6 +129,12 @@ class MainWindow(tk.Tk):
             messagebox.showwarning("Warning!", f"Course not found: {self.panopto_model.config.COURSE}")
         else:
             messagebox.showinfo("Success", "Download successful")
+
+    def show_token(self):
+        token = self.panopto_model.config.TOKEN
+        if not token:
+            return
+        messagebox.showinfo("Token", f"Your token is:\n\n{token}")
 
     def set_token(self):
         self.panopto_model.set_token(self.token_entry.get())

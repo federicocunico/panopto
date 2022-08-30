@@ -19,8 +19,7 @@ You will need the ASPXAUTH token. Follow the instructions below
 - Python >=3.6
 - ffmpeg 
     - Linux: suggested install: `apt-get install ffmpeg`
-    - Windows: download the ffmpeg [binaries](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z) and place it in the same folder of the executable/python file with the following structure: `./ffmpeg/<executables>.exe`
-
+    - Windows: download the ffmpeg [binaries zip](https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip) or [binaries 7z](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z) and place it in the same folder of the executable/python file with the following structure: `./ffmpeg/<executables>.exe`
 - Python modules:
     - youtube_dl
     - tk
@@ -28,6 +27,23 @@ You will need the ASPXAUTH token. Follow the instructions below
     - pydantic
 
 ## Windows instructions
+
+Download the ffmpeg binaries.
+From powershell: 
+
+```powershell
+# Download file
+Invoke-WebRequest -OutFile ffmpeg.zip -Uri https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+# Extract archive
+Expand-Archive ./ffmpeg.zip -DestinationPath ./ffmpeg_build
+# Create new folder
+New-Item -ErrorAction Ignore -Path "./" -Name "ffmpeg" -ItemType "directory"
+# Copy binaries
+Get-ChildItem -Path ./ffmpeg_build -Recurse -File | Move-Item -Destination ./ffmpeg
+# Remove old folder
+Remove-Item -LiteralPath "./ffmpeg_build" -Force -Recurse
+```
+
 Run the main file (`main_tk.py`) file or the executable, after placing the ffmpeg binaries (see requirements) in the same folder as the main file / executable. The structure should be:
 
 ```
@@ -51,13 +67,13 @@ You can distribute in two modes: `pyinstaller` and `nuitka`.
 ### Pyinstaller
 First, install `pyinstaller` with 
 
-```
+```bash
 pip install pyinstaller
 ```
 
 Then execute (use `pyinstaller.exe` instead of `pyinstaller` on windows)
 
-```
+```bash
 pyinstaller --onefile main_tk.py
 ```
 

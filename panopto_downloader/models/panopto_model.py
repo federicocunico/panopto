@@ -17,7 +17,12 @@ class PanoptoModel():
         self.config = config
 
     def set_token(self, text: str):
-        self.config.TOKEN = text
+        # preprocess token
+        token = ""
+        for t in text:
+            if t.isalnum():
+                token += t
+        self.config.TOKEN = token
         self.config.dump()
 
     # WHYYYY does panopto use at least 3 different types of API!?!?!?
@@ -80,7 +85,10 @@ class PanoptoModel():
         )["d"]["Results"]
 
         for session in sessions:
-            self.dl_session(session)
+            try:
+                self.dl_session(session)
+            except:
+                print(f"Error downloading session + {session}")
 
     def is_course(self, text: str):
         regexp = re.compile("\([0-9]+\/[0-9]+\)", re.IGNORECASE)
