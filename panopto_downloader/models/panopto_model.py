@@ -39,7 +39,19 @@ class PanoptoModel():
 
     @staticmethod
     def name_normalize(name):
-        return name.replace("/", "-")
+        illegal_chars = {
+            "/": "-",
+            ":": "",
+            ">": "",
+            "<": "",
+            "\\": "",
+            "|": "",
+            "?": "",
+            "*": ""
+        }
+        for k,v in illegal_chars.items():
+            name = name.replace(k, v)
+        return name
 
     def dl_session(self, session):
         dest_dir = os.path.join(
