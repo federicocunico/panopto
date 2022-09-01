@@ -4,5 +4,23 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"launch": {
+			"configurations": [
+				{
+					"name": "Main Window",
+					"type": "python",
+					"request": "launch",
+					"cwd": "${workspaceFolder}",
+					"env": {
+						"PYTHONPATH": "."
+					},
+					"program": "${workspaceFolder}/main_tk.py",
+					"console": "integratedTerminal",
+					"justMyCode": true
+				}
+			],
+			"compounds": []
+		}
+	}
 }

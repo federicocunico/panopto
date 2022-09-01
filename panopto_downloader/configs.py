@@ -1,63 +1,93 @@
+from __future__ import annotations
+
+import json
 import os
 import sys
-import configparser
 from tkinter import messagebox
 from typing import Dict, Optional
 from pydantic import BaseModel
 
-conf_file = "panopto.ini"
+from .utils import is_tool
+
+conf_file = "panopto.json"
+ffmpeg_default_binaries = "./ffmpeg/ffmpeg.exe"
+
 
 class Config(BaseModel):
     COURSE: Optional[str]
     PANOPTO_BASE: str
     TOKEN: Optional[str]
+    DEFAULT_FFMPEG_LOCATION: Optional[str]
 
     # see youtube_dl.YoutubeDL
     ydl_opts: Dict[str, str] = {}
 
     def dump(self) -> None:
+        d = self.dict()
+
         with open(conf_file, "w") as fp:
-            fp.write("[PANOPTO]\n")
-            fp.write(f"BASE_URL={self.PANOPTO_BASE}\n")
-            fp.write(
-                "# Replace <INSERT TOKEN HERE> with your token, for example like this (yours will be longer):\n")
-            fp.write(
-                "# TOKEN=BBDE70AB7BB5F57576A6FC97E8DC302F2138F53C4993B60B2A0051DBBAEF12D9923F4FF4CA8C8F67FBE0\n")
-            fp.write(f"TOKEN={self.TOKEN}\n")
+            json.dump(d, fp, indent=4, sort_keys=True)
+
+    @staticmethod
+    def load() -> Config:
+        with open(conf_file, "r") as fp:
+            data = json.load(fp)
+        return Config(**data)
+
 
 def config_setup() -> Config:
     if not os.path.isfile(conf_file):
-        with open(conf_file, "w") as fp:
-            fp.write("[PANOPTO]\n")
-            fp.write("BASE_URL=https://univr.cloud.panopto.eu\n")
-            fp.write(
-                "# Replace <INSERT TOKEN HERE> with your token, for example like this (yours will be longer):\n")
-            fp.write(
-                "# TOKEN=BBDE70AB7BB5F57576A6FC97E8DC302F2138F53C4993B60B2A0051DBBAEF12D9923F4FF4CA8C8F67FBE0\n")
-            fp.write("TOKEN=<INSERT TOKEN HERE>\n")
+        c = Config(
+            COURSE=None,
+            PANOPTO_BASE="https://univr.cloud.panopto.eu"
+        )
+        c.dump()
 
-    config = configparser.ConfigParser()
-    config.read(conf_file)
-
-    panopto_base = config["PANOPTO"]["BASE_URL"]
-    token = config["PANOPTO"]["TOKEN"]
-
-    config = Config(COURSE=None, PANOPTO_BASE=panopto_base, TOKEN=token)
+    config = Config.load()
 
     return config
 
 
-def init_config() -> Config:
+def ensure_ffmpeg(config: Optional[Config] = None) -> bool:
+    if config is not None and config.DEFAULT_FFMPEG_LOCATION is not None:
+        found = os.path.isfile(config.DEFAULT_FFMPEG_LOCATION)
+        return found, True
+
+    found = is_tool("ffmpeg")
+    local_binaries = False
+    if not found and sys.platform == "win32":
+        # Hardcoded for Windows
+        if config is None:
+            binaries_location = ffmpeg_default_binaries
+        else:
+            if config.DEFAULT_FFMPEG_LOCATION is None:
+                binaries_location = ffmpeg_default_binaries
+            else:
+                binaries_location = config.DEFAULT_FFMPEG_LOCATION
+        found = os.path.isfile(binaries_location)
+        local_binaries = True
+
+        # updates default ffmpeg location is found and is None
+        if found and config.DEFAULT_FFMPEG_LOCATION is None:
+            config.DEFAULT_FFMPEG_LOCATION = binaries_location
+            config.dump()
+
+    return found, local_binaries
+
+
+def initialize_app() -> Config:
     config = config_setup()
 
-    # Hardcoded for Windows
-    if sys.platform == "win32":
-        ffmpeg_file = "./ffmpeg/ffmpeg.exe"
-        if not os.path.isfile(ffmpeg_file):
-            error = f"FFMPEG not found in {ffmpeg_file}. Download the binaries and place them here."
-            messagebox.showerror("Error!", error)
-            sys.exit(-1)
+    ffmpeg_found, local_binaries = ensure_ffmpeg(config)
 
-        config.ydl_opts["ffmpeg_location"] = ffmpeg_file
+    if not ffmpeg_found:
+        error = f"FFMPEG not found in system nor in \"{config.DEFAULT_FFMPEG_LOCATION}\". Please install it, or download the binaries and place them in the folder as \"{config.DEFAULT_FFMPEG_LOCATION}\"."
+        messagebox.showerror("Error!", error)
+        sys.exit(-1)
+
+    if local_binaries:
+        config.ydl_opts["ffmpeg_location"] = config.DEFAULT_FFMPEG_LOCATION
+
+        print(f"FFMPEG found locally in {config.DEFAULT_FFMPEG_LOCATION}")
 
     return config
