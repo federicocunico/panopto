@@ -14,7 +14,6 @@ ffmpeg_default_binaries = "./ffmpeg/ffmpeg.exe"
 
 
 class Config(BaseModel):
-    COURSE: Optional[str]
     PANOPTO_BASE: str
     TOKEN: Optional[str]
     DEFAULT_FFMPEG_LOCATION: Optional[str]
@@ -38,7 +37,6 @@ class Config(BaseModel):
 def config_setup() -> Config:
     if not os.path.isfile(conf_file):
         c = Config(
-            COURSE=None,
             PANOPTO_BASE="https://univr.cloud.panopto.eu"
         )
         c.dump()
@@ -76,8 +74,10 @@ def ensure_ffmpeg(config: Optional[Config] = None) -> bool:
 
 
 def initialize_app() -> Config:
+    # 1. Load Config from file
     config = config_setup()
 
+    # 2. Find FFMPEG on system
     ffmpeg_found, local_binaries = ensure_ffmpeg(config)
 
     if not ffmpeg_found:
@@ -87,7 +87,8 @@ def initialize_app() -> Config:
 
     if local_binaries:
         config.ydl_opts["ffmpeg_location"] = config.DEFAULT_FFMPEG_LOCATION
-
         print(f"FFMPEG found locally in {config.DEFAULT_FFMPEG_LOCATION}")
+    else:
+        print(f"FFMPEG found")
 
     return config

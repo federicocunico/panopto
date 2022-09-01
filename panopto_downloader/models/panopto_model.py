@@ -1,6 +1,10 @@
 import json
 import os
+import threading
+import time
 from tkinter import messagebox
+import tkinter
+from typing import Dict, List, Optional, Tuple
 import requests
 import youtube_dl
 import re
@@ -15,6 +19,10 @@ class PanoptoModel():
         self.session.cookies = requests.utils.cookiejar_from_dict(
             {".ASPXAUTH": config.TOKEN})
         self.config = config
+
+        self.selected_course: Optional[str] = None
+
+        self.courses_in_download: Dict[str, threading.Thread] = {}
 
     def set_token(self, text: str):
         # preprocess token
@@ -135,7 +143,12 @@ class PanoptoModel():
 
         return courses
 
-    def download_now(self) -> bool:
+    def download_now(self) -> Tuple[bool, str]:
+        course_name = self.selected_course
+
+        # if course_name in self.courses_in_download:
+        #     return False, "Already downloading"
+
         folders = self.json_api(
             "/Panopto/Api/v1.0-beta/Folders", {
                 "parentId": "null", "folderSet": 1
@@ -148,9 +161,60 @@ class PanoptoModel():
         found = False
         for folder in folders:
             name = folder["Name"]
-            if matches(name, self.config.COURSE):
-                messagebox.showinfo("Starting download", f"Press OK to download the course: \"{self.config.COURSE}\"")
+            if matches(name, course_name):
+                messagebox.showinfo("Starting download", f"Press OK to download the course: \"{course_name}\"")
                 self.dl_folder(folder)
                 found = True
 
-        return found
+        if not found:
+            return found, "Course not found."
+
+        # if ending_callback is not None:
+        #     ending_callback(course_name)
+
+        return found, course_name
+
+    def async_start_download(self, listbox: Optional[tkinter.Listbox]=None):
+        course_name = self.selected_course
+        if course_name is None:
+            messagebox.showwarning("Warning!", f"No course selected")
+            return
+        
+        if course_name in self.courses_in_download:
+            messagebox.showwarning("Warning!", f"Already downloading!")
+            return
+
+        def download():
+            found, reason = self.download_now()
+            if not found:
+                messagebox.showwarning(
+                    "Warning!", f"{reason}")
+            else:
+                messagebox.showinfo("Success", f"Successfully downloaded {reason}")
+
+        if listbox is not None:
+            listbox.insert(tkinter.END, course_name)
+        thread = threading.Thread(target=download)
+        thread.start()
+
+        self.courses_in_download[course_name] = thread
+
+        ending_thread = threading.Thread(target=self._remove_finished_download, args=(course_name,listbox))
+        ending_thread.start()
+
+    def _remove_finished_download(self, course_name, listbox: Optional[tkinter.Listbox] = None):
+        assert course_name in self.courses_in_download, "Error stopping thread"
+
+        th = self.courses_in_download[course_name]
+        if th.is_alive():
+            th.join()  # wait for completition
+
+        del self.courses_in_download[course_name]
+
+        if listbox is not None:
+            idx = listbox.get(0, tkinter.END).index(course_name)
+            if idx >= 0:
+                listbox.delete(idx)
+            else:
+                print("Error, not found course in listbox, unexpected!")
+
