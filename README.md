@@ -28,6 +28,15 @@ You will need the ASPXAUTH token. Follow the instructions below
 
 ## Windows instructions
 
+You can choose to install it manually or via package manager (Chocolatey). 
+
+### Package Manager - Chocolatey
+Install it with (Chocolatey)[https://chocolatey.org/] from an Administrator terminal with:
+```
+choco install ffmpeg
+```
+
+### Manually
 Download the ffmpeg binaries.
 From powershell: 
 
