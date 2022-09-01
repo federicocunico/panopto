@@ -1,0 +1,4 @@
+requests
+tk
+youtube_dl
+pydantic
