@@ -2,6 +2,7 @@ import json
 import os
 import threading
 import time
+from datetime import datetime
 from tkinter import messagebox
 import tkinter
 from typing import Dict, List, Optional, Tuple
@@ -17,7 +18,7 @@ class PanoptoModel():
     def __init__(self, config: Config) -> None:
         self.session = requests.session()
         self.session.cookies = requests.utils.cookiejar_from_dict(
-            {".ASPXAUTH": config.TOKEN})
+            {".ASPXAUTH": config.ASPXAUTH_token})
         self.config = config
 
         self.selected_course: Optional[str] = None
@@ -30,16 +31,16 @@ class PanoptoModel():
         for t in text:
             if t.isalnum():
                 token += t
-        self.config.TOKEN = token
+        self.config.ASPXAUTH_token = token
         self.config.dump()
 
     # WHYYYY does panopto use at least 3 different types of API!?!?!?
     def json_api(self, endpoint, params=dict(), post=False, paramtype="params"):
         if post:
-            r = self.session.post(self.config.PANOPTO_BASE +
+            r = self.session.post(self.config.panopto_base +
                                   endpoint, **{paramtype: params})
         else:
-            r = self.session.get(self.config.PANOPTO_BASE +
+            r = self.session.get(self.config.panopto_base +
                                  endpoint, **{paramtype: params})
         if not r.ok:
             print(r.text)
@@ -61,14 +62,7 @@ class PanoptoModel():
             name = name.replace(k, v)
         return name
 
-    def dl_session(self, session):
-        dest_dir = os.path.join(
-            "downloads",
-            self.name_normalize(session["FolderName"]),
-            self.name_normalize(session["SessionName"]),
-        )
-        if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
+    def dl_session(self, session, dest_dir: str):
         delivery_info = self.json_api(
             "/Panopto/Pages/Viewer/DeliveryInfo.aspx",
             {"deliveryId": session["DeliveryID"], "responseType": "json"},
@@ -106,9 +100,20 @@ class PanoptoModel():
 
         for session in sessions:
             try:
-                self.dl_session(session)
-            except:
-                print(f"Error downloading session + {session}")
+                epoch_start = int(session["StartTime"].split("(")[1].split(")")[0]) // 1000
+                start_time = datetime.fromtimestamp(epoch_start)
+                dest_dir = os.path.join(
+                    self.config.downloads_path,
+                    self.name_normalize(session["FolderName"]),
+                    f'{start_time.strftime("%Y%m%d_%H%M%S")}_' + self.name_normalize(session["SessionName"]),
+                )
+                
+                if not os.path.exists(dest_dir):
+                    os.makedirs(dest_dir)
+
+                self.dl_session(session, dest_dir)
+            except Exception as e:
+                print(f"Error downloading session + {session['FolderName']}/{session['SessionName']}. Exception: {e}")
 
     def is_course(self, text: str):
         regexp = re.compile("\([0-9]+\/[0-9]+\)", re.IGNORECASE)
