@@ -140,7 +140,7 @@ class MainWindow(tk.Tk):
         self.token_entry = tk.Entry(self.root)
         self.token_entry.config(font=("helvetica", 10))
         self.token_entry.place(x=20, y=130, width=280, height=25)
-        self.set_last_token(self.panopto_model.config.TOKEN)
+        self.set_last_token(self.panopto_model.config.ASPXAUTH_token)
 
     def make_download_button_ui(self):
         download_button = tk.Button(self.root)
@@ -183,7 +183,7 @@ class MainWindow(tk.Tk):
         thread = self.panopto_model.async_start_download(self.download_listbox)
 
     def show_token(self):
-        token = self.panopto_model.config.TOKEN
+        token = self.panopto_model.config.ASPXAUTH_token
         if not token:
             return
         messagebox.showinfo("Token", f"Your token is:\n\n{token}")
